@@ -10,8 +10,6 @@ from google.oauth2.credentials import Credentials
 import shutil
 
 # === 配置 Google Drive ===
-os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
-os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 ROOT_FOLDER_NAME = '气象数据'  # 根目录名称
