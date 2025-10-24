@@ -2,8 +2,8 @@ name: ☁️ Auto Download HK Weather Data
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 每天 UTC 2 点（香港/台北时间早上 10 点）
-  workflow_dispatch:      # 手动触发
+    - cron: "0 0 * * *"  # 每天 UTC 0 点（香港/台北时间早上 8 点）
+  workflow_dispatch:
 
 jobs:
   run:
@@ -20,13 +20,15 @@ jobs:
           python-version: "3.11"
 
       - name: 📚 Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: 🔑 Prepare Google credentials
+        env:
+          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+          GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
         run: |
-          echo "${{ secrets.GDRIVE_CREDENTIALS }}" > credentials.json
-          echo "${{ secrets.GDRIVE_TOKEN }}" > token.json
+          echo "$GDRIVE_CREDENTIALS" | jq '.' > credentials.json
+          echo "$GDRIVE_TOKEN" | jq '.' > token.json
 
       - name: ▶️ Run main script
         run: |
