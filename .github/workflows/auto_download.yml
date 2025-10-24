@@ -1,0 +1,67 @@
+name: ☁️ Auto Download HK Weather Data
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # 每天 UTC 2 点（香港/台北时间早上 10 点）
+  workflow_dispatch:      # 手动触发
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📚 Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: 🔑 Prepare Google credentials
+        run: |
+          echo "${{ secrets.GDRIVE_CREDENTIALS }}" > credentials.json
+          echo "${{ secrets.GDRIVE_TOKEN }}" > token.json
+
+      - name: ▶️ Run main script
+        run: |
+          python download_and_upload.py > run_log.txt 2>&1
+
+      - name: 🧾 Detect errors
+        id: check_log
+        run: |
+          if grep -iE "error|exception|❌|failed" run_log.txt; then
+            echo "has_error=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_error=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ☁️ Upload error log to Google Drive (if any)
+        if: steps.check_log.outputs.has_error == 'true'
+        run: |
+          pip install google-api-python-client google-auth google-auth-oauthlib
+          python - <<'PYCODE'
+          from google.oauth2.credentials import Credentials
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
+
+          creds = Credentials.from_authorized_user_file("token.json", ["https://www.googleapis.com/auth/drive.file"])
+          service = build("drive", "v3", credentials=creds)
+
+          file_metadata = {"name": "weather_error_log.txt"}
+          media = MediaFileUpload("run_log.txt", mimetype="text/plain")
+          uploaded = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+
+          print(f"☁️ Error log uploaded to Google Drive: {uploaded.get('id')}")
+          PYCODE
+
+      - name: 📤 Upload log to GitHub (for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-log
+          path: run_log.txt
