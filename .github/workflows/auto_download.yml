@@ -39,12 +39,17 @@ jobs:
       - name: 🧾 Detect errors
         id: check_log
         run: |
-          if grep -iE "error|exception|❌|failed" run_log.txt; then
+          # 如果只是测试邮件，直接设 true
+          TEST_MODE=true
+          if [ "$TEST_MODE" = "true" ]; then
             echo "has_error=true" >> $GITHUB_OUTPUT
           else
-            echo "has_error=false" >> $GITHUB_OUTPUT
+            if grep -iE "error|exception|❌|failed" run_log.txt; then
+              echo "has_error=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_error=false" >> $GITHUB_OUTPUT
+            fi
           fi
-
       # ✅ 上传错误日志到 Google Drive（如果有错误）
       - name: ☁️ Upload error log to Google Drive (if any)
         if: steps.check_log.outputs.has_error == 'true'
