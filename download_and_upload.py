@@ -13,13 +13,10 @@ from google.oauth2 import service_account
 
 # === 配置 Google Drive ===
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-SERVICE_ACCOUNT_FILE = 'service_account.json'
 ROOT_FOLDER_NAME = '气象数据'  # 根目录名称
 
 def get_drive_service():
-    creds = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
+    creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     service = build('drive', 'v3', credentials=creds)
     return service
 
