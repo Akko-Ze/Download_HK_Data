@@ -8,14 +8,18 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 import shutil
+from google.oauth2 import service_account
+
 
 # === 配置 Google Drive ===
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-
+SERVICE_ACCOUNT_FILE = 'service_account.json'
 ROOT_FOLDER_NAME = '气象数据'  # 根目录名称
 
 def get_drive_service():
-    creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    )
     service = build('drive', 'v3', credentials=creds)
     return service
 
