@@ -41,7 +41,7 @@ jobs:
         id: check_log
         run: |
           # 设置测试模式: true=强制触发邮件, false=正常日志检测
-          TEST_MODE=true
+          TEST_MODE=false
 
           if [ "$TEST_MODE" = "true" ]; then
             echo "has_error=true" >> $GITHUB_OUTPUT
