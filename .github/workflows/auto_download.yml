@@ -34,7 +34,6 @@ jobs:
       # ✅ 运行下载上传脚本
       - name: ▶️ Run main script
         run: python download_and_upload.py > run_log.txt 2>&1
-        continue-on-error: true
 
       # ✅ 检测脚本是否报错
       - name: 🧾 Detect errors
