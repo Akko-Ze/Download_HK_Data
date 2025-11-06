@@ -1,93 +1,38 @@
-name: ☁️ Auto Download HK Weather Data
+name: 📨 Test Email Sending
 
 on:
-  schedule:
-    - cron: "0 0 * * *"  # 每天 UTC 0 点（香港/台北时间早上 8 点）
   workflow_dispatch:
 
 jobs:
-  run:
+  test-email:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
     steps:
       - name: 📦 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: 📚 Install dependencies
-        run: pip install -r requirements.txt
-
-      # ✅ 准备 Google OAuth credentials
-      - name: 🔑 Prepare Google OAuth credentials
-        env:
-          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
-          GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
-        run: |
-          echo "$GDRIVE_CREDENTIALS" | jq '.' > credentials.json
-          echo "$GDRIVE_TOKEN" | jq '.' > token.json
-
-      # ✅ 运行下载上传脚本
-      - name: ▶️ Run main script
-        run: python download_and_upload.py > run_log.txt 2>&1
-
-      # ✅ 检测脚本是否报错
-      - name: 🧾 Detect errors
+      - name: 🧾 Force error for testing
         id: check_log
         run: |
-          # 如果只是测试邮件，直接设 true
-          TEST_MODE=true
-          if [ "$TEST_MODE" = "true" ]; then
-            echo "has_error=true" >> $GITHUB_OUTPUT
-          else
-            if grep -iE "error|exception|❌|failed" run_log.txt; then
-              echo "has_error=true" >> $GITHUB_OUTPUT
-            else
-              echo "has_error=false" >> $GITHUB_OUTPUT
-            fi
-          fi
-      # ✅ 上传错误日志到 Google Drive（如果有错误）
-      - name: ☁️ Upload error log to Google Drive (if any)
-        if: steps.check_log.outputs.has_error == 'true'
-        run: |
-          pip install google-api-python-client google-auth google-auth-oauthlib
-          python - <<'PYCODE'
-          from google.oauth2.credentials import Credentials
-          from googleapiclient.discovery import build
-          from googleapiclient.http import MediaFileUpload
+          # 强制触发错误，直接写 has_error=true
+          echo "has_error=true" >> $GITHUB_OUTPUT
+          echo "✅ TEST: 强制触发错误邮件发送" >> run_log.txt
 
-          SCOPES = ["https://www.googleapis.com/auth/drive.file"]
-          creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-          service = build("drive", "v3", credentials=creds)
-
-          file_metadata = {"name": "weather_error_log.txt"}
-          media = MediaFileUpload("run_log.txt", mimetype="text/plain")
-          uploaded = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
-          print(f"☁️ Error log uploaded to Google Drive: {uploaded.get('id')}")
-          PYCODE
-
-      # ✅ 发送错误邮件到网易邮箱
-      - name: 📧 Send error email to NetEase
+      - name: 📧 Send test email to NetEase
         if: steps.check_log.outputs.has_error == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.163.com   # 网易邮箱 SMTP
+          server_address: smtp.163.com
           server_port: 465
-          username: ${{ secrets.EMAIL_USER }}      # 网易邮箱账号
-          password: ${{ secrets.EMAIL_PASS }}      # 网易邮箱授权码
-          subject: "[Weather Download] ❌ 自动任务出错"
-          body: "自动下载任务出现错误，请查看附件日志。"
-          to: your_email@163.com                    # 收件邮箱，可是网易/126/yeah
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: "[TEST] 邮件发送功能测试"
+          body: "这是一次测试邮件，用于验证 GitHub Actions 邮件发送是否正常。"
+          to: your_email@163.com
           from: ${{ secrets.EMAIL_USER }}
           attachments: run_log.txt
 
-      # ✅ 上传日志到 GitHub（调试用）
-      - name: 📤 Upload log to GitHub
+      - name: 📤 Upload log to GitHub (optional)
         uses: actions/upload-artifact@v4
         with:
-          name: workflow-log
+          name: test-log
           path: run_log.txt
