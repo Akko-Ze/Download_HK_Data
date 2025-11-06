@@ -27,7 +27,7 @@ jobs:
           password: ${{ secrets.EMAIL_PASS }}
           subject: "[TEST] 邮件发送功能测试"
           body: "这是一次测试邮件，用于验证 GitHub Actions 邮件发送是否正常。"
-          to: your_email@163.com
+          to: Mr_zhaoze@163.com
           from: ${{ secrets.EMAIL_USER }}
           attachments: run_log.txt
 
