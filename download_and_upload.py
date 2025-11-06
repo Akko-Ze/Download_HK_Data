@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 import shutil
-from google.oauth2 import service_account
+from google.oauth2 import service_accoun
 
 
 # === 配置 Google Drive ===
